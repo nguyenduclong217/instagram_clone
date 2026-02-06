@@ -88,7 +88,7 @@ export default function EmailSignUp() {
         data.username,
         data.password,
         data.confirmPassword,
-        data.fullName,
+        // data.fullName,
       );
       navigate("/verify-email/");
     } catch (error) {
