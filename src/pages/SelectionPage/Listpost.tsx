@@ -360,24 +360,24 @@ export default function Listpost() {
               <img
                 onClick={() => navigate(`/users/${item?.userId?._id}`)}
                 src={
-                  item.image
-                    ? `https://instagram.f8team.dev${item.image}`
+                  item?.image
+                    ? `https://instagram.f8team.dev${item?.image}`
                     : `data:image/png;base64,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`
                 }
                 className="w-12 h-12 rounded-full p-1"
                 alt=""
               />
               <h1 className="ml-3 font-bold text-[12px]">
-                {item?.userId.username} -
+                {item?.userId?.username} -
                 <span className="text-gray-400 font-normal">
-                  {dayjs(item.createdAt).fromNow()}
+                  {dayjs(item?.createdAt).fromNow()}
                 </span>
               </h1>
             </div>
 
             <div>
               <Dialog
-                open={open && activePostId === item._id}
+                open={open && activePostId === item?._id}
                 onOpenChange={(value) => {
                   setOpen(value);
                   if (!value) {
@@ -390,10 +390,10 @@ export default function Listpost() {
                   <Button
                     variant="outline"
                     onClick={() => {
-                      setActivePostId(item._id);
+                      setActivePostId(item?._id);
                       setMode("menu");
                       setOpen(true);
-                      setPostId(item._id);
+                      setPostId(item?._id);
                     }}
                     className="cursor-pointer"
                   >
@@ -411,7 +411,7 @@ export default function Listpost() {
                         Unfollow
                       </button>
 
-                      {user?._id === item.userId._id && (
+                      {user?._id === item?.userId?._id && (
                         <>
                           <button
                             className="py-3  cursor-pointer"
@@ -448,7 +448,7 @@ export default function Listpost() {
                       </h2>
 
                       <textarea
-                        defaultValue={item.caption}
+                        defaultValue={item?.caption}
                         onChange={(e) => setCaption(e.target.value)}
                         className="w-full border p-2"
                       />
@@ -481,22 +481,22 @@ export default function Listpost() {
             </div>
           </div>
           {/* Img post */}
-          {item.mediaType === "image" && item.image && (
+          {item?.mediaType === "image" && item?.image && (
             <img
-              src={`https://instagram.f8team.dev${item.image}`}
+              src={`https://instagram.f8team.dev${item?.image}`}
               alt="post"
               className="w-[500px] mx-auto mt-10 "
             />
           )}
 
-          {item.mediaType === "video" && item.video && (
+          {item?.mediaType === "video" && item?.video && (
             <video
               autoPlay
               loop
               muted
               playsInline
               className="w-[300px] mx-auto mt-10 "
-              src={`https://instagram.f8team.dev${item.video}`}
+              src={`https://instagram.f8team.dev${item?.video}`}
 
               //   className="w-full max-h-[600px] rounded-md"
             />
@@ -507,39 +507,39 @@ export default function Listpost() {
                 <div className="flex items-center gap-1 cursor-pointer group">
                   <Heart
                     className={`transition-transform duration-200 group-hover:scale-110 cursor-pointer ${
-                      item.isLiked ? "text-red-500 fill-red-500" : "text-black"
+                      item?.isLiked ? "text-red-500 fill-red-500" : "text-black"
                     }`}
-                    onClick={() => likeMutation.mutate(item._id)}
+                    onClick={() => likeMutation.mutate(item?._id)}
                     size={20}
                   />
-                  <span>{item.likes}</span>
+                  <span>{item?.likes}</span>
                 </div>
                 <div className="flex items-center gap-1 cursor-pointer group">
                   <Dialog>
                     <DialogTrigger asChild>
                       <button
                         className="flex items-center gap-1 cursor-pointer group"
-                        onClick={() => setPostId(item._id)}
+                        onClick={() => setPostId(item?._id)}
                       >
                         <MessageCircle
                           className="transition-transform duration-200 group-hover:scale-110"
                           size={20}
                         />
-                        <span>{item.comments}</span>
+                        <span>{item?.comments}</span>
                       </button>
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-[80%] h-[80%] flex">
-                      {item.mediaType === "image" && item.image && (
+                      {item?.mediaType === "image" && item?.image && (
                         <img
-                          src={`https://instagram.f8team.dev${item.image}`}
+                          src={`https://instagram.f8team.dev${item?.image}`}
                           alt="post"
                           className="w-[50%] h-[80%] my-auto"
                         />
                       )}
 
-                      {item.mediaType === "video" && item.video && (
+                      {item?.mediaType === "video" && item?.video && (
                         <video
-                          src={`https://instagram.f8team.dev${item.video}`}
+                          src={`https://instagram.f8team.dev${item?.video}`}
                           controls
                           className="w-[50%] h-[80%] my-auto"
                         />
@@ -551,15 +551,15 @@ export default function Listpost() {
                           <div className="flex items-center cursor-pointer py-3 ">
                             <img
                               src={
-                                item.profilePicture
-                                  ? `https://instagram.f8team.dev${item.profilePicture}`
+                                item?.profilePicture
+                                  ? `https://instagram.f8team.dev${item?.profilePicture}`
                                   : "https://pethouse.com.vn/wp-content/uploads/2022/12/Ngoai-hinh-husky-768x1024-1.jpg"
                               }
                               className="w-12 h-12 rounded-full p-1"
                               alt=""
                             />
                             <h1 className="ml-3 font-bold text-[12px]">
-                              {item.userId.username}
+                              {item?.userId?.username ?? "Unknown user"}
                             </h1>
                           </div>
 
@@ -606,9 +606,9 @@ export default function Listpost() {
                             </p>
                           )}
                           {postDetailData?.data?.comments?.map((item) => (
-                            <div key={item._id} className=" mt-3">
+                            <div key={item?._id} className=" mt-3">
                               <div className="flex items-center cursor-pointer">
-                                <NavLink to={`/users/${item.user?._id}`}>
+                                <NavLink to={`/users/${item?.user?._id}`}>
                                   <img
                                     src="https://cafefcdn.com/zoom/700_438/203337114487263232/2022/3/3/photo1646280815645-1646280816151764748403.jpg"
                                     className="w-12 h-12 rounded-full p-1"
@@ -619,7 +619,7 @@ export default function Listpost() {
                                   <div className="flex items-center gap-2">
                                     <NavLink to={`/users/${item?.user?._id}`}>
                                       <h1 className="font-semibold text-sm">
-                                        {item.user?.username}
+                                        {item?.user?.username}
                                       </h1>
                                     </NavLink>
 
@@ -640,7 +640,8 @@ export default function Listpost() {
                                       onClick={() =>
                                         setReplyTo({
                                           commentId: item._id,
-                                          username: item.user?.username,
+                                          username:
+                                            item.user?.username ?? "unknown",
                                         })
                                       }
                                     >
@@ -663,10 +664,10 @@ export default function Listpost() {
                                                   className="cursor-pointer"
                                                   onClick={() => {
                                                     setEditingComment({
-                                                      commentId: item._id,
-                                                      content: item.content,
+                                                      commentId: item?._id,
+                                                      content: item?.content,
                                                     });
-                                                    setEditValue(item.content);
+                                                    setEditValue(item?.content);
                                                     setOpenEdit(true);
                                                   }}
                                                 >
@@ -681,9 +682,9 @@ export default function Listpost() {
                                                     deleteCommentMutation.mutate(
                                                       {
                                                         postId:
-                                                          item.postId ||
+                                                          item?.postId ||
                                                           postId!,
-                                                        commentId: item._id,
+                                                        commentId: item?._id,
                                                       },
                                                     )
                                                   }
@@ -768,7 +769,7 @@ export default function Listpost() {
                               <ReplyComment
                                 comment={item}
                                 postId={postId}
-                                forceOpen={openReplyFor === item._id}
+                                forceOpen={openReplyFor === item?._id}
                               />
                             </div>
                           ))}
@@ -778,11 +779,11 @@ export default function Listpost() {
                             <div className="flex gap-3 border-t border-t-gray-400 py-2">
                               <Heart
                                 className={`transition-transform duration-200 group-hover:scale-110 cursor-pointer ${
-                                  item.isLiked
+                                  item?.isLiked
                                     ? "text-red-500 fill-red-500"
                                     : "text-black"
                                 }`}
-                                onClick={() => likeMutation.mutate(item._id)}
+                                onClick={() => likeMutation.mutate(item?._id)}
                                 size={23}
                               />
                               <MessageCircle
@@ -803,9 +804,9 @@ export default function Listpost() {
                               />
                             </div>
                             <div>
-                              <h1 className="font-bold">{item.likes} like</h1>
+                              <h1 className="font-bold">{item?.likes} like</h1>
                               <p className="text-[13px] text-gray-400">
-                                {dayjs(item.createdAt).fromNow()}
+                                {dayjs(item?.createdAt).fromNow()}
                               </p>
                               <div className="border-t border-t-gray-400 py-2">
                                 {replyTo && (
@@ -844,7 +845,7 @@ export default function Listpost() {
                                       if (replyTo) {
                                         replyMutation.mutate(
                                           {
-                                            postId: item._id,
+                                            postId: item?._id,
                                             commentId: replyTo.commentId,
                                             content: comment,
                                           },
@@ -859,7 +860,7 @@ export default function Listpost() {
                                       } else {
                                         //GỬI COMMENT
                                         commentMutation.mutate({
-                                          postId: item._id,
+                                          postId: item?._id,
                                           content: comment,
                                         });
                                       }
@@ -901,7 +902,7 @@ export default function Listpost() {
               </div>
             </div>
           </div>
-          <h1 className="px-3">{item.caption}</h1>
+          <h1 className="px-3">{item?.caption}</h1>
         </div>
       ))}
     </div>
