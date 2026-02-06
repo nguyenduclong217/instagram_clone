@@ -34,7 +34,7 @@ import * as z from "zod";
 import { useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { infoUserId } from "@/service/authServices";
-import UserPost from "./SelectionPage/userPost";
+import UserPost from "./SelectionPage/UserPost";
 import { followUser, unFollowUser } from "@/service/status";
 
 const schema = z.object({
