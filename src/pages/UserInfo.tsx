@@ -13,7 +13,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Footer from "./Footer";
 import {
   Dialog,
-  // DialogClose,
   DialogContent,
   DialogHeader,
   DialogTitle,
@@ -35,7 +34,7 @@ import * as z from "zod";
 import { useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { infoUserId } from "@/service/authServices";
-import UserPost from "./SelectonPage/userPost";
+import UserPost from "./SelectionPage/userPost";
 import { followUser, unFollowUser } from "@/service/status";
 
 const schema = z.object({

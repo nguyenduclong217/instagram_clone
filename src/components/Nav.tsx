@@ -38,7 +38,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { logout } from "@/service/authServices";
-import CreatePost from "@/pages/SelectonPage/CreatePost";
+import CreatePost from "@/pages/SelectionPage/CreatePost";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   addSearchHistory,

@@ -26,8 +26,8 @@ import {
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import instance from "./utils/axios";
-import Listpost from "./SelectonPage/Listpost";
-import ListUserUnFollow from "./SelectonPage/ListUserUnFollow";
+import Listpost from "./SelectionPage/Listpost";
+import ListUserUnFollow from "./SelectionPage/ListUserUnFollow";
 import { searchUser } from "@/service/search";
 
 export default function Home() {
