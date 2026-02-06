@@ -50,26 +50,6 @@ export default function Home() {
             </div>
             <h1 className="text-center text-[12px]">Mèo meoo</h1>
           </div>
-          <div>
-            <div className="border-3 border-gray-500 rounded-full">
-              <img
-                src="https://cafefcdn.com/zoom/700_438/203337114487263232/2022/3/3/photo1646280815645-1646280816151764748403.jpg"
-                className="w-20 h-20 rounded-full p-1"
-                alt=""
-              />
-            </div>
-            <h1 className="text-center text-[12px]">Mèo meoo</h1>
-          </div>
-          <div>
-            <div className="border-3 border-gray-500 rounded-full">
-              <img
-                src="https://cafefcdn.com/zoom/700_438/203337114487263232/2022/3/3/photo1646280815645-1646280816151764748403.jpg"
-                className="w-20 h-20 rounded-full p-1"
-                alt=""
-              />
-            </div>
-            <h1 className="text-center text-[12px]">Mèo meoo</h1>
-          </div>
         </div>
 
         {/* ListPost */}

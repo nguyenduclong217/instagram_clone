@@ -295,20 +295,6 @@ export default function Listpost() {
 
       setOpenReplyFor(variables.commentId);
 
-      //   queryClient.setQueryData(
-      //     ["replyComment", postId, commentId],
-      //     (old: any) => {
-      //       if (!old) return old;
-      //       return {
-      //         ...old,
-      //         data: {
-      //           ...old.data,
-      //           replies: [...old.data.replies, res.data.data],
-      //           total: old.data.total + 1,
-      //         },
-      //       };
-      //     },
-      //   );
     },
   });
 
