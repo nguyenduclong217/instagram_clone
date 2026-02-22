@@ -18,24 +18,26 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   follower,
   following,
   profileUser,
   removeAvt,
   updateProfile,
+  infoUserId,
 } from "@/service/inforUser";
-import { useAuthStore } from "@/stores/infoUser";
+// import { useAuthStore } from "@/stores/infoUser";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
 import * as z from "zod";
 import { useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { infoUserId } from "@/service/authServices";
 import UserPost from "./SelectionPage/UserPost";
 import { followUser, unFollowUser } from "@/service/status";
+import { userAuthStore } from "@/types/user.type";
+// import { userAuthStore, type InfoUser } from "@/types/user.type";
 
 const schema = z.object({
   fullName: z
@@ -51,12 +53,19 @@ const schema = z.object({
     }),
   bio: z.string().optional(),
   profilePicture: z
-    .any()
+    .instanceof(FileList)
     .optional()
     .refine(
       (files) =>
         !files || files.length === 0 || files[0].size <= 2 * 1024 * 1024,
       { message: "Ảnh phải nhỏ hơn 2MB" },
+    )
+    .refine(
+      (files) =>
+        !files ||
+        files.length === 0 ||
+        ["image/jpeg", "image/png", "image/webp"].includes(files[0].type),
+      { message: "Chỉ chấp nhận JPG, PNG, WEBP" },
     ),
   gender: z.string().optional(),
   website: z.string(),
@@ -71,16 +80,25 @@ type ChangeInfo = {
 
 export default function UserInfo() {
   const navigate = useNavigate();
+  const { userId } = useParams<{ userId: string }>();
+  const setUser = userAuthStore((s) => s.setUser);
+  const user = userAuthStore((s) => s.user);
+  const accessToken = localStorage.getItem("access_token");
+  const clearUser = userAuthStore((s) => s.clearUser);
+  const [avatar, setAvatar] = useState<string | null>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+
+  const [openEdit, setOpenEdit] = useState(false);
 
   const queryClient = useQueryClient();
   const followMutation = useMutation({
-    mutationFn: () => {
-      const token = localStorage.getItem("access_token")!;
-      return followUser(token, userId!);
+    mutationFn: (userId: string) => {
+      if (accessToken === null) throw new Error("No accessToken");
+      return followUser(accessToken, userId);
     },
-    onSuccess: () => {
+    onSuccess: async (_, userId) => {
       toast.success("Đã theo dõi");
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ["userProfile", userId],
       });
     },
@@ -88,13 +106,13 @@ export default function UserInfo() {
 
   //unfollow
   const unFollowMutation = useMutation({
-    mutationFn: () => {
-      const token = localStorage.getItem("access_token")!;
-      return unFollowUser(token, userId!);
+    mutationFn: (userId: string) => {
+      if (accessToken === null) throw new Error("No accessToken");
+      return unFollowUser(accessToken, userId);
     },
-    onSuccess: () => {
+    onSuccess: async (_, userId) => {
       toast.success("Đã bỏ theo dõi");
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ["userProfile", userId],
       });
     },
@@ -110,29 +128,24 @@ export default function UserInfo() {
     mode: "onChange",
   });
 
-  const { userId } = useParams<{ userId: string }>();
-  const setUser = useAuthStore((s) => s.setUser);
-  const user = useAuthStore((s) => s.user);
-
-  const clearUser = useAuthStore((s) => s.clearUser);
   console.log(userId);
   const { data } = useQuery({
     queryKey: ["userProfile", userId],
     queryFn: () => infoUserId(userId as string),
-    enabled: !!userId,
+    enabled: userId !== "",
   });
 
   // follower
   const {
     data: followerData,
-    isLoading,
-    error,
+    // isLoading,
+    // error,
   } = useQuery({
     queryKey: ["userFollower", userId],
     queryFn: () => follower(userId as string),
-    enabled: !!userId,
+    enabled: userId !== "",
   });
-
+  console.log(followerData);
   // following
   const {
     data: followingData,
@@ -141,41 +154,38 @@ export default function UserInfo() {
   } = useQuery({
     queryKey: ["userFollowing", userId],
     queryFn: () => following(userId as string),
-    enabled: !!userId,
+    enabled: userId !== "",
   });
 
   console.log(followingData);
   console.log(data);
 
   const hasAnyChange =
-    dirtyFields.fullName ||
-    dirtyFields.bio ||
-    dirtyFields.gender ||
-    dirtyFields.profilePicture ||
-    dirtyFields.website;
+    dirtyFields.fullName === true ||
+    dirtyFields.bio === true ||
+    dirtyFields.gender === true ||
+    dirtyFields.profilePicture === true ||
+    dirtyFields.website === true;
 
   const onSubmit: SubmitHandler<ChangeInfo> = async (data) => {
     try {
-      const accessToken = localStorage.getItem("access_token");
-      if (!accessToken) return;
+      if (accessToken === null) throw new Error("No accessToken");
 
       const formData = new FormData();
-      if (data.fullName) formData.append("fullName", data.fullName);
-      if (data.bio) formData.append("bio", data.bio);
-      if (data.website) formData.append("website", data.website);
-      if (data.gender) formData.append("gender", data.gender);
+      if (data.fullName !== undefined && data.fullName.trim() !== "")
+        formData.append("fullName", data.fullName);
+      if (data.bio !== undefined && data.bio.trim() !== "")
+        formData.append("bio", data.bio);
+      if (data.website !== undefined && data.website.trim() !== "")
+        formData.append("website", data.website);
+      if (data.gender !== undefined) formData.append("gender", data.gender);
 
       if (data.profilePicture && data.profilePicture.length > 0) {
         formData.append("profilePicture", data.profilePicture[0]);
       }
-      await updateProfile(formData, accessToken);
-      setUser({
-        ...user,
-        fullName: data.fullName ?? user.fullName,
-        bio: data.bio ?? user.bio,
-        gender: data.gender ?? user.gender,
-        profilePicture: avatar ?? user.profilePicture,
-      });
+      const updateUser = await updateProfile(formData, accessToken);
+      setUser(updateUser);
+      setOpenEdit(false);
       toast.success("Cập nhật profile thành công");
     } catch (error) {
       toast.error("Cập nhật thất bại");
@@ -184,56 +194,66 @@ export default function UserInfo() {
     console.log(data);
   };
 
-  const handleRemoveAvt = async () => {
-    try {
-      const accessToken = localStorage.getItem("access_token");
-      if (!accessToken) return;
+  const handleRemoveAvt = useMutation({
+    mutationFn: () => {
+      if (accessToken === null || accessToken === "")
+        throw new Error("No token");
+      return removeAvt(accessToken);
+    },
 
-      await removeAvt(accessToken);
-
-      // CẬP NHẬT state real-time
-
-      setUser({
-        ...user,
-        profilePicture:
-          "https://thumbs.dreamstime.com/b/default-avatar-profile-trendy-style-social-media-user-icon-187599373.jpg",
-      });
-
+    onSuccess: () => {
+      setUser({ ...user, profilePicture: null });
       toast.success("Xóa ảnh thành công");
-    } catch (error) {
-      toast.error("Xóa ảnh không thành công");
-      console.error(error);
-    }
-  };
-  useEffect(() => {
-    if (!data?.data?.profilePicture) return;
-    setAvatar(`https://instagram.f8team.dev${data?.data?.profilePicture}`);
-    const fetchProfile = async () => {
-      const accessToken = localStorage.getItem("access_token");
-      if (!accessToken) return;
+    },
 
-      try {
-        const response = await profileUser(accessToken);
-        if (response?.data) {
-          setUser(response.data);
-        }
-      } catch {
-        clearUser();
-      }
-    };
+    onError: () => {
+      toast.error("Xóa ảnh thất bại");
+    },
+  });
 
-    fetchProfile();
-  }, [data?.data?.profilePicture]);
+  // setUser = userAuthStore((s) => s.setUser);
+  const { data: infoUser } = useQuery({
+    queryKey: ["userInfo"],
+    queryFn: () => {
+      if (accessToken === null) throw new Error("No accessToken");
+      return profileUser(accessToken);
+    },
+    enabled: accessToken !== null,
+  });
+
+  console.log(infoUser);
+  // useEffect(() => {
+  //   if (!data?.data?.profilePicture) return;
+  //   setAvatar(`https://instagram.f8team.dev${data?.data?.profilePicture}`);
+  //   const fetchProfile = async () => {
+  //     const accessToken = localStorage.getItem("access_token");
+  //     if (!accessToken) return;
+
+  //     try {
+  //       const response = await profileUser(accessToken);
+  //       if (response?.data) {
+  //         setUser(response.data);
+  //       }
+  //     } catch {
+  //       clearUser();
+  //     }
+  //   };
+
+  //   fetchProfile();
+  // }, [data?.data?.profilePicture]);
 
   const [open, setOpen] = useState(false);
 
-  const [avatar, setAvatar] = useState<string | null>(null);
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const fileRef = useRef<HTMLInputElement | null>(null);
 
-  const fileRef = useRef(null);
-  // setAvatar(`https://instagram.f8team.dev${data?.data?.profilePicture}`);
-  const handleUpload = (e) => {
-    const file = e.target.files[0];
+  const avatarUrl = avatarFile
+    ? URL.createObjectURL(avatarFile)
+    : user?.profilePicture != null
+      ? `https://instagram.f8team.dev${user.profilePicture}`
+      : "data:image/png;base64,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";
+
+  const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (!file) return;
 
     if (file.size > 2 * 1024 * 1024) {
@@ -242,7 +262,7 @@ export default function UserInfo() {
     }
 
     setAvatarFile(file);
-    setValue("profilePicture", e.target.files, {
+    setValue("profilePicture", e.target.files ?? undefined, {
       shouldValidate: true,
       shouldDirty: true,
     });
@@ -250,27 +270,46 @@ export default function UserInfo() {
     const preview = URL.createObjectURL(file);
     setAvatar(preview);
   };
+
+  useEffect(() => {
+    if (!avatarFile) return;
+
+    const url = URL.createObjectURL(avatarFile);
+    return () => URL.revokeObjectURL(url);
+  }, [avatarFile]);
   return (
     <div className="w-[900px] ml-20 mt-12">
       {/* Header */}
       <div className="w-[70%] mx-auto flex gap-3">
         <button className="cursor-pointer">
-          <img
-            src={
-              avatar
-                ? avatar
-                : `data:image/png;base64,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`
-            }
-            alt=""
-            className="w-40 h-40 rounded-full"
-          />
+          {user?._id === userId ? (
+            <img
+              src={
+                user
+                  ? `https://instagram.f8team.dev${user.profilePicture}`
+                  : `data:image/png;base64,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`
+              }
+              alt=""
+              className="w-40 h-40 rounded-full"
+            />
+          ) : (
+            <img
+              src={
+                data
+                  ? `https://instagram.f8team.dev${data.profilePicture}`
+                  : `data:image/png;base64,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`
+              }
+              alt=""
+              className="w-40 h-40 rounded-full"
+            />
+          )}
         </button>
         <div className="p-3 flex-1">
           <div className="flex text-[24px]  items-center gap-2">
             <Dialog>
               <DialogTrigger asChild>
                 <button className="font-semibold cursor-pointer">
-                  {user._id === userId ? user?.username : data?.data?.fullName}
+                  {user?._id === userId ? user?.username : data?.fullName}
                 </button>
               </DialogTrigger>
               <DialogContent
@@ -337,9 +376,10 @@ export default function UserInfo() {
             </Dialog>
           </div>
           <p className="text-[14px] text-gray-700 my-1">
-            {user._id === userId ? user?.fullName : data?.data?.fullName}
+            {user?._id === userId ? user?.fullName : data?.fullName}
           </p>
-          <p> {user._id === userId ? user?.bio : data?.data?.bio}</p>
+          <p> {user?._id === userId ? user?.bio : data?.bio}</p>
+          <p>{user?._id === userId ? user?.website : data?.website}</p>
           <div className="flex gap-3">
             <p className="">
               <span className="font-semibold">1</span> post
@@ -350,7 +390,7 @@ export default function UserInfo() {
                 <button className="flex items-center gap-1 cursor-pointer group">
                   <p>
                     <span className="font-semibold">
-                      {data?.data?.followersCount}
+                      {data?.followersCount}
                     </span>{" "}
                     Follower
                   </p>
@@ -370,22 +410,22 @@ export default function UserInfo() {
                   />
                 </div>
                 <div className="h-90 px-4 flex flex-col gap-2">
-                  {followerData?.data?.followers.map((item) => (
+                  {followerData?.followers.map((item) => (
                     <div className="mt-2 flex items-center gap-3">
                       <img
-                        onClick={() => navigate(`/users/${item._id}`)}
+                        onClick={() => void navigate(`/users/${item._id}`)}
                         src={
-                          item?.profilePicture
-                            ? `https://instagram.f8team.dev${item?.profilePicture}`
+                          item.profilePicture
+                            ? `https://instagram.f8team.dev/${item.profilePicture}`
                             : `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOEAAADhCAMAAAAJbSJIAAAAWlBMVEXZ3OFveH/c3+RrdHtpcnlncXjIzNHS1tve4eaGjZTFyc96gonW2d7N0daUm6GssbeOlZuboqeyt728wcZ0fYShp614gYiKkZiRmZ63vMGCiZC/xMmYn6WgpqxjXxUbAAAFrElEQVR4nO2dW5uiMAyGJVQpAoIKzqjs//+bW2Qcz0pp2qZM3ouZ3bnie9KkSQ/pbMYwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDPNnAcXtPyaFnCXbZpXu6qjepatmm6i/TAiYLZqDEHEc9cSxEIdmMZuKJSHfpL/iLsRxusmnoBFm5U48yOsRuzJ8O8p99krfSWO2D9sfIane6TtprJKAzSi30aP/PfhjtA3WjNDMP+rrmDehWnE1TKCSuPL9qeNIP7ngBZH6/tgxpJ9d8EIcoMQvHYFK4pfvD9YEVnoClcRVUOFGlsN98IwoA5o0YKsvUEnchmPFpB4hMIrqxPeHDwW+dZ2wJ/4OxIiwHTrT3zMPZZyOG6Mdte9PH4RsxoSZHtGEEE/zcU7YE+e+P/8zsjFSGIARcwN9HeSNCKWJCZURS/LhNDO0YeZbwAdgaWZCZcQlbSPKtbHCNfFYYzpIyQ/ThakJlREXvkW8A0bUhfcI0tFUVgg2rCg7Yn4wFhhFB8qTfoEgMIoK3zJeA8uxleE1c8IzIuzNA40KNXvCCg2T0h7KqSkYVU6/Cglv1JjnbCeFhPM2VsgKA1D4D0XhP7oKpx9L/8B8uEHJaTaEFY7aVXtQSHj3YvqZ96xA8UPC1dPYrdFbaG+UotT4vkW8Q2ofwXgkXtGd8HEmRMrTYRdMEVYTKYdSlFBDO9DMIDVWmJI2IYIj0nbDzhGNbUjbDZVE0xnxQFzgX9jlTgxtSDuSdpilNbQTmh8WJpO+IL09+oPJHiLtvcNfCoNzbZRLwwvjj+6FcXCvY+yBDOLHMC6MPTZE/bDQFWOO6od2WH894jbCOhgLdsBKV6II60aJotWTKFrfH6zN0MuHPUFeQRx0gbQn1GukkFQD75CGexVYHt9e5O4R2TFIA/YA7A9Pmg1cjc/4sA+8SQbI5TqLn6pUf83WSxm2vg6Qs2VZZXHXF6OTevqp/pNV5XI2AX0nAGReHDdN+119pV/Vd9tsjkUuAx+eD4DS2Ynqf01MHMMwDMMwf4Quo4EL08pqVOqdJ8t92bQqK00PqcpM26bcL5N8Aom3slSy2LRpLeY/lcVP2aSqi7mo03azSAK2piooVNm0U4XS6wJYiJ0qovIQbankbdsXpe9jIdxuQxMJcGzrN7Z7tGXdHgMarTIvswHGuzdlVuZhLEnJotWWdxbZFvQ1QrGaG+xyz1cF7bEKRavhfU81ipawRsibwQv5bzRGDdXGrbB/2YpVD7EjeYtUFh9blWporOiFHLlBGKAX4mhDSyLkiAbsERUlb5THGtOAPXFNZ08KoxvGM+h0yBjca1YXGr1pIdHoNauLSP3vDkOR4bvghTjzneHAwkKMuZFYL7xKRDia/xmfp92cCPQpERC6Qg0h9jVQAaffzhA8hZtk50zhzs8dBa2W5GZ4aWiu37HbSKL7s5njjgGPx/kBYji6tGBHfHRrRZRr6Xq4vVsKmu8CYBB/OTSiLG3VS++YO3RFlOYQ+rhrJyEdzoQ3ClNHRsTpQjMGV51rcvdx9EztpC0mTkOvcThpA+aqZHoh0UEhBQhtZg0UVtYVuk/X7iRaT958ZDM3Cm1nNuY9140lWl618euFJ4WWPdHgnjYWdu97g8e58Exs9a6p6fMcOFhMbPxlpNfYzE4lRjs2cw72UrfCR+H7yNxarMFpwGqOvRau0vx5DhwyW8PUa1Vxja1HPnB66GJgq5mUNO82h4WlBRvTHleYWFkdhi2VQaqGqZVWw2ZPxuFi5wE6Qm5oyREdbvl+xsamsN81tntsrLnhvCGDhY23aHDePcDCxvsJGM9x4WGlOR+N2vCMhabfpEKplWDq7gDUMPCrYKOmnfjgtwGFIzGF6PsXtKZDGxMinfK3B78IprIKdQZ/NWr6CmklbTbSNp/nE54x/MzCf1KbVTlwOOGiAAAAAElFTkSuQmCC`
                         }
                         alt=""
                         className="w-15 h-15 rounded-full"
                       />
                       <div className="w-[72%]">
-                        <h1 className="font-semibold">{item?.username}</h1>
+                        <h1 className="font-semibold">{item.username}</h1>
                         <p className="text-[14px] text-gray-400">
-                          {item?.fullname}
+                          {item.fullName}
                         </p>
                       </div>
                       <Button className="cursor-pointer">Follow</Button>
@@ -401,7 +441,7 @@ export default function UserInfo() {
                 <button className="flex items-center gap-1 cursor-pointer group">
                   <p className="">
                     <span className="font-semibold">
-                      {data?.data?.followingCount}
+                      {data?.followingCount}
                     </span>{" "}
                     Follow
                   </p>
@@ -421,7 +461,7 @@ export default function UserInfo() {
                   />
                 </div>
                 <div className="h-90 px-4 flex flex-col gap-2">
-                  {followingData?.data?.following.map((item) => (
+                  {followingData?.following.map((item) => (
                     <div className="mt-2 flex items-center gap-3">
                       <img
                         src={`https://instagram.f8team.dev${item?.profilePicture}`}
@@ -431,7 +471,7 @@ export default function UserInfo() {
                       <div className="w-[72%]">
                         <h1 className="font-semibold">{item?.username}</h1>
                         <p className="text-[14px] text-gray-400">
-                          {item?.fullname}
+                          {item?.fullName}
                         </p>
                       </div>
                       <Button className="cursor-pointer">Unfollow</Button>
@@ -456,15 +496,15 @@ export default function UserInfo() {
       {/* Content */}
       <div>
         <div className="w-[70%] mx-auto mt-4">
-          {user._id === userId ? (
+          {user?._id === userId ? (
             <div>
-              <Dialog>
+              <Dialog open={openEdit} onOpenChange={setOpenEdit}>
                 <DialogTrigger asChild>
                   <Button
                     className="w-[49%] bg-gray-200 text-black hover:bg-gray-300"
                     onClick={() =>
                       setAvatar(
-                        `https://instagram.f8team.dev${data?.data?.profilePicture}`,
+                        `https://instagram.f8team.dev${data?.profilePicture}`,
                       )
                     }
                   >
@@ -472,13 +512,19 @@ export default function UserInfo() {
                   </Button>
                 </DialogTrigger>
                 <DialogContent showCloseButton={false} className="w-100">
-                  <form onSubmit={handleSubmit(onSubmit)} className="p-3">
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      void handleSubmit(onSubmit)(e);
+                    }}
+                    className="p-3"
+                  >
                     <div className="flex items-center justify-between bg-gray-100 rounded-2xl p-4 mb-8">
                       <div className="flex items-center gap-4">
                         <div className="w-14 h-14 rounded-full bg-gray-300 flex items-center justify-center">
                           <img
                             // src={`https://instagram.f8team.dev${data?.data?.profilePicture}`}
-                            src={avatar}
+                            src={avatarUrl}
                             alt=""
                             className="w-15 h-15 rounded-full"
                           />
@@ -519,11 +565,11 @@ export default function UserInfo() {
                             />
                             <DialogTitle
                               className="text-red-600 font-semibold"
-                              onClick={() => (
-                                setOpen(false),
-                                localStorage.removeItem("avatar"),
-                                handleRemoveAvt()
-                              )}
+                              onClick={() => {
+                                setOpen(false);
+                                localStorage.removeItem("avatar");
+                                handleRemoveAvt.mutate();
+                              }}
                             >
                               Remove Current Photo
                             </DialogTitle>
@@ -544,7 +590,7 @@ export default function UserInfo() {
                         className="w-full px-4 py-3 rounded-md bg-gray-300 border border-zinc-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         {...register("fullName")}
                       />
-                      {errors?.fullName?.message && (
+                      {errors.fullName?.message !== undefined && (
                         <span className="text-red-600 text-sm ml-2">
                           {errors.fullName.message}
                         </span>
@@ -557,7 +603,7 @@ export default function UserInfo() {
                         Tiểu sử
                       </label>
                       <textarea
-                        defaultValue={user?.bio}
+                        defaultValue={user?.bio ?? ""}
                         rows={4}
                         className="w-full px-4 py-3 rounded-md bg-gray-300 border border-zinc-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
                         {...register("bio")}
@@ -569,7 +615,7 @@ export default function UserInfo() {
                         Website
                       </label>
                       <input
-                        defaultValue={user?.website}
+                        defaultValue={user?.website ?? ""}
                         type="text"
                         className="w-full px-2 py-2 rounded-md bg-gray-300 border border-zinc-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
                         {...register("website")}
@@ -581,7 +627,7 @@ export default function UserInfo() {
                       </label>
                       <select
                         {...register("gender")}
-                        defaultValue={user?.gender}
+                        defaultValue={user?.gender ?? ""}
                       >
                         <option value="">-- Chọn giới tính --</option>
                         <option value="female">Nữ</option>
@@ -594,6 +640,7 @@ export default function UserInfo() {
                     <button
                       type="submit"
                       disabled={!isValid || !hasAnyChange}
+                      // onClick={() => setOpenEdit(false)}
                       className={`w-full py-3 mt-4 rounded-md font-medium transition
                      ${
                        !isValid || !hasAnyChange
@@ -612,7 +659,7 @@ export default function UserInfo() {
             </div>
           ) : (
             <div className="flex gap-2">
-              {!data?.data?.isFollowing ? (
+              {data && !data.isFollowing ? (
                 // CHƯA FOLLOW
                 <Button
                   className="flex-1 bg-blue-500 hover:bg-blue-600"
@@ -625,7 +672,7 @@ export default function UserInfo() {
                 <>
                   <Button
                     className="flex-1 bg-gray-200 text-black hover:bg-gray-300"
-                    onClick={() => navigate(`/messages/${userId}`)}
+                    onClick={() => void navigate(`/messages/${userId}`)}
                   >
                     Nhắn tin
                   </Button>

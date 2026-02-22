@@ -13,48 +13,37 @@ import {
 import { Button } from "@/components/ui/button";
 import { createPost } from "@/service/postServices";
 import toast from "react-hot-toast";
-// import { zodResolver } from "@hookform/resolvers/zod";
+import type { ChangeEvent } from "react";
 
-// const schema = z.object({
-//   file: z.instanceof(File, { message: "Vui lòng chọn ảnh hoặc video" }),
-
-//   caption: z.string().max(2200, "Caption tối đa 2200 ký tự").optional(),
-// });
-// type Post = z.infer<typeof schema>;
 export default function CreatePost() {
-  //   const {
-  //     register,
-  //     handleSubmit,
-  //     setValue,
-  //     formState: { errors, isValid },
-  //   } = useForm<Post>({
-  //     resolver: zodResolver(schema),
-  //     mode: "onChange",
-  //   });
-
-  //   const onSubmit: SubmitHandler<Post> = async (data) => {
-  //     console.log(data);
-  //   };
   const [file, setFile] = useState<File | null>(null);
   const [caption, setCaption] = useState("");
 
   const previewUrl = file ? URL.createObjectURL(file) : null;
 
-  const fileRef = useRef(null);
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files?.[0]) {
-      setFile(e.target.files[0]);
-    }
+  const fileRef = useRef<HTMLInputElement | null>(null);
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.currentTarget.files?.[0];
+    if (!file) return;
+
+    setFile(file);
   };
-  const handleSubmit = async () => {
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
     const accessToken = localStorage.getItem("access_token");
+    if (typeof accessToken !== "string") return;
+
     if (!file) {
       toast.error("Vui lòng chọn ảnh hoặc video");
       return;
     }
+
     const formData = new FormData();
     formData.append("file", file);
     formData.append("caption", caption);
+
     try {
       await createPost(accessToken, formData);
       toast.success("Đăng bài thành công 🎉");
@@ -63,6 +52,7 @@ export default function CreatePost() {
       toast.error("Đăng bài thất bại");
     }
   };
+
   const resetForm = () => {
     setFile(null);
     setCaption("");
@@ -119,43 +109,51 @@ export default function CreatePost() {
             </div>
           ) : (
             <div className="flex flex-col h-full w-full">
-              {/* PREVIEW */}
               <form
-                // onSubmit={handleSubmit(onSubmit)}
-                className="w-full bg-black flex items-center justify-center max-h-[400px]"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  void handleSubmit(e);
+                }}
+                className="flex flex-col h-full w-full"
               >
-                {file.type.startsWith("image") ? (
-                  <img
-                    src={previewUrl!}
-                    alt="preview"
-                    className="max-h-[400px] w-full object-contain"
-                  />
-                ) : (
-                  <video
-                    src={previewUrl!}
-                    controls
-                    className="max-h-[400px] w-full"
-                  />
-                )}
-              </form>
-
-              <div className="flex flex-col gap-3 p-4 border-t">
-                <div>
-                  <input
-                    placeholder="Viết chú thích..."
-                    value={caption}
-                    onChange={(e) => setCaption(e.target.value)}
-                    className="resize-none w-[80%] px-2 py-3 text-sm outline-none"
-                  />
-                  <Button className="ml-4 w-20" onClick={() => resetForm()}>
-                    Hủy
-                  </Button>
+                <div className="w-full bg-black flex items-center justify-center max-h-[400px]">
+                  {file.type.startsWith("image") ? (
+                    <img
+                      src={previewUrl!}
+                      alt="preview"
+                      className="max-h-[400px] w-full object-contain"
+                    />
+                  ) : (
+                    <video
+                      src={previewUrl!}
+                      controls
+                      className="max-h-[400px] w-full"
+                    />
+                  )}
                 </div>
 
-                <Button onClick={handleSubmit} className="self-end px-6">
-                  Đăng bài
-                </Button>
-              </div>
+                <div className="flex flex-col gap-3 p-4 border-t">
+                  <div>
+                    <input
+                      placeholder="Viết chú thích..."
+                      value={caption}
+                      onChange={(e) => setCaption(e.target.value)}
+                      className="resize-none w-[80%] px-2 py-3 text-sm outline-none"
+                    />
+                    <Button
+                      type="button"
+                      className="ml-4 w-20"
+                      onClick={resetForm}
+                    >
+                      Hủy
+                    </Button>
+                  </div>
+
+                  <Button type="submit" className="self-end px-6">
+                    Đăng bài
+                  </Button>
+                </div>
+              </form>
             </div>
           )}
         </DialogContent>

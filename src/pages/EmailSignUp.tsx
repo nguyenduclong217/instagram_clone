@@ -7,14 +7,6 @@ import * as z from "zod";
 import { handleRegister } from "@/service/authServices";
 import { useNavigate } from "react-router-dom";
 
-type EmailSignUp = {
-  email: string;
-  password: string;
-  confirmPassword: string;
-  fullName: string;
-  username: string;
-};
-
 const schema = z
   .object({
     email: z
@@ -81,6 +73,14 @@ export default function EmailSignUp() {
   console.log(isValid);
   const navigate = useNavigate();
 
+  type EmailSignUp = {
+    email: string;
+    password: string;
+    confirmPassword: string;
+    fullName: string;
+    username: string;
+  };
+
   const onSubmit: SubmitHandler<EmailSignUp> = async (data) => {
     try {
       await handleRegister(
@@ -88,9 +88,9 @@ export default function EmailSignUp() {
         data.username,
         data.password,
         data.confirmPassword,
-        // data.fullName,
+        data.fullName,
       );
-      navigate("/verify-email/");
+      void navigate("/verify-email/");
     } catch (error) {
       console.log(error);
     }
@@ -119,7 +119,10 @@ export default function EmailSignUp() {
           </div>
           <form
             className="my-6 flex flex-col gap-2"
-            onSubmit={handleSubmit(onSubmit)}
+            onSubmit={(e) => {
+              e.preventDefault();
+              void handleSubmit(onSubmit)(e);
+            }}
           >
             <div className="flex justify-center flex-col gap-2">
               <input
@@ -128,7 +131,7 @@ export default function EmailSignUp() {
                 className="w-[80%] px-3 py-2 border border-gray-300 rounded-sm text-sm focus:outline-none focus:border-gray-400 mx-auto"
                 {...register("email")}
               />
-              {errors?.email?.message && (
+              {errors.email?.message !== undefined && (
                 <span className="text-red-600 text-sm ml-10">
                   {errors.email.message}
                 </span>
@@ -141,7 +144,7 @@ export default function EmailSignUp() {
                 className="w-[80%] px-3 py-2 border mx-auto border-gray-300 rounded-sm text-sm focus:outline-none focus:border-gray-400"
                 {...register("password")}
               />
-              {errors?.password?.message && (
+              {errors.password?.message !== undefined && (
                 <span className="text-red-600 text-sm ml-10">
                   {errors.password.message}
                 </span>
@@ -154,7 +157,7 @@ export default function EmailSignUp() {
                 className="w-[80%] px-3 py-2 border mx-auto border-gray-300 rounded-sm text-sm focus:outline-none focus:border-gray-400"
                 {...register("confirmPassword")}
               />
-              {errors?.confirmPassword?.message && (
+              {errors.confirmPassword?.message !== undefined && (
                 <span className="text-red-600 text-sm ml-10">
                   {errors.confirmPassword.message}
                 </span>
@@ -167,7 +170,7 @@ export default function EmailSignUp() {
                 className="w-[80%] px-3 mx-auto py-2 border border-gray-300 rounded-sm text-sm focus:outline-none focus:border-gray-400"
                 {...register("fullName")}
               />
-              {errors?.fullName?.message && (
+              {errors.fullName?.message !== undefined && (
                 <span className="text-red-600 text-sm ml-10">
                   {errors.fullName.message}
                 </span>
@@ -180,7 +183,7 @@ export default function EmailSignUp() {
                 className="w-[80%] mx-auto px-3 py-2 border border-gray-300 rounded-sm text-sm focus:outline-none focus:border-gray-400"
                 {...register("username")}
               />
-              {errors?.username?.message && (
+              {errors.username?.message !== undefined && (
                 <span className="text-red-600 text-sm ml-10">
                   {errors.username.message}
                 </span>
@@ -209,7 +212,7 @@ export default function EmailSignUp() {
       <div className="w-[400px] h-30 mx-auto border mt-9 flex flex-col justify-center items-center">
         <h1 className="mx-auto">Have an accounts?</h1>
         <button
-          onClick={() => navigate(`/login`)}
+          onClick={() => void navigate(`/login`)}
           // disabled={!isValid}
           className="text-blue-600 disabled:bg-blue-300 font-semibold cursor-pointer"
         >

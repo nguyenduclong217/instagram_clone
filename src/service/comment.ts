@@ -1,32 +1,47 @@
 // Create comment
 
 import instance from "@/pages/utils/axios";
+import type {
+  ApiResponse,
+  CreateComment,
+  PostComment,
+  ReplyApi,
+  ReplyResponse,
+} from "@/types/post.type";
 
-export const createComment = (
+export const createComment = async (
   accessToken: string,
   postId: string,
   content: string,
   parentCommentId: string | null = null,
-) => {
-  return instance.post(
+): Promise<CreateComment> => {
+  const res = await instance.post<{ data: CreateComment }>(
     `/api/posts/${postId}/comments`,
     {
       content,
       parentCommentId,
     },
-    { headers: { Authorization: `Bearer ${accessToken}` } },
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    },
   );
+
+  return res.data.data;
 };
 
 // List Reply Comment postDetail
 
-export const listReplyPost = async (postId: string, commentId: string) => {
+export const listReplyPost = async (
+  postId: string,
+  commentId: string,
+): Promise<ReplyApi[]> => {
   try {
-    const res = await instance.get(
+    const res = await instance.get<ApiResponse<{ replies: ReplyApi[] }>>(
       `/api/posts/${postId}/comments/${commentId}/replies`,
     );
-    const data = res.data;
-    return data;
+    return res.data.data.replies;
   } catch (error) {
     console.error("listUser error:", error);
     throw error;
@@ -40,22 +55,16 @@ export const replyComment = async (
   postId: string,
   content: string,
   commentId: string,
-) => {
-  try {
-    const response = await instance.post(
-      `/api/posts/${postId}/comments/${commentId}/replies`,
-      { content },
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      },
-    );
+): Promise<ReplyApi> => {
+  const response = await instance.post<ReplyResponse<ReplyApi>>(
+    `/api/posts/${postId}/comments/${commentId}/replies`,
+    { content },
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    },
+  );
 
-    return response.data;
-  } catch (error) {
-    // handleAxiosError(error);
-  }
+  return response.data.data;
 };
 
 // Chinh sua binh luan
@@ -67,7 +76,7 @@ export const editComment = async (
   commentId: string,
 ) => {
   try {
-    const response = await instance.patch(
+    const response = await instance.patch<ApiResponse<PostComment>>(
       `/api/posts/${postId}/comments/${commentId}`,
       { content },
       {
@@ -76,8 +85,7 @@ export const editComment = async (
         },
       },
     );
-    const data = response.data;
-    return data;
+    return response.data.data;
   } catch (error) {
     console.error("listUser error:", error);
     throw error;
@@ -86,24 +94,23 @@ export const editComment = async (
 
 // Delete comment
 
+type DeleteComment = {
+  _id: string;
+};
+
 export const deleteComment = async (
   accessToken: string,
   postId: string,
   commentId: string,
-) => {
-  try {
-    const response = await instance.delete(
-      `/api/posts/${postId}/comments/${commentId}`,
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
+): Promise<DeleteComment> => {
+  const response = await instance.delete<ApiResponse<DeleteComment>>(
+    `/api/posts/${postId}/comments/${commentId}`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
       },
-    );
-    const data = response.data;
-    return data;
-  } catch (error) {
-    console.error("listUser error:", error);
-    throw error;
-  }
+    },
+  );
+
+  return response.data.data;
 };

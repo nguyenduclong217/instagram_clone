@@ -15,6 +15,7 @@ export default function VerifyEmailNotice() {
   const email = useRegisterStore.getState().email;
   const { cooldown, isDisabled, startCooldown, tick } = useResendStore();
 
+
   const handleResend = async (email: string) => {
     try {
       await handleResendEmail(email);
@@ -23,7 +24,6 @@ export default function VerifyEmailNotice() {
       console.log(error);
     }
   };
-  
 
   useEffect(() => {
     if (!isDisabled) return;
@@ -39,32 +39,36 @@ export default function VerifyEmailNotice() {
 
   // console.log(email);
   // console.log(token);
-
   useEffect(() => {
-    const verity = async () => {
-      if (!token) return;
+    if (token === undefined) return;
 
-      const response = await handleVerifyEmail(token);
-
-      if (response) {
-        toast.success(response.message);
+    const verify = async () => {
+      try {
+        await handleVerifyEmail(token);
+        toast.success("Email verified successfully");
         setTimeout(() => navigate("/login"), 2000);
+      } catch {
+        toast.error("Xác nhận email thất bại");
       }
     };
-    verity();
+
+    verify();
   }, [token, navigate]);
 
   const { handleSubmit } = useForm<FormValues>({
     mode: "onChange",
   });
 
-  const onSubmit: SubmitHandler<FormValues> = async (data) => {
+  const onSubmit: SubmitHandler<FormValues> = (data) => {
     console.log(data);
   };
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <form
-        onSubmit={handleSubmit(onSubmit)}
+        onSubmit={(e) => {
+          e.preventDefault();
+          void handleSubmit(onSubmit)(e);
+        }}
         className="max-w-md w-full bg-white shadow-md rounded-2xl p-8 text-center"
       >
         {/* Icon */}
@@ -86,7 +90,10 @@ export default function VerifyEmailNotice() {
         {/* Actions */}
         <div className="flex flex-col gap-3">
           <button
-            onClick={() => handleResend(email)}
+            onClick={() => {
+              if (email === null) return;
+              void handleResend(email);
+            }}
             disabled={isDisabled}
             className="w-full py-2  rounded-lg bg-blue-500 disabled:bg-blue-400 text-white hover:bg-blue-600 transition"
           >

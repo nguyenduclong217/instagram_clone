@@ -24,14 +24,17 @@ import {
   Bookmark,
   Annoyed,
 } from "lucide-react";
-import { NavLink } from "react-router-dom";
-import instance from "./utils/axios";
+// import { NavLink } from "react-router-dom";
+// import instance from "./utils/axios";
 import Listpost from "./SelectionPage/Listpost";
 import ListUserUnFollow from "./SelectionPage/ListUserUnFollow";
-import { searchUser } from "@/service/search";
+// import { searchUser } from "@/service/search";
 
 export default function Home() {
   const user = useAuthStore((s) => s.user);
+
+  const refreshToken = localStorage.getItem("access_token");
+  console.log(refreshToken);
   console.log(user);
   // list user
 

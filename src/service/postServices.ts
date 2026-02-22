@@ -1,8 +1,23 @@
 import instance from "@/pages/utils/axios";
+import {
+  PostDetail,
+  type ExploreResponse,
+  type LikePostResponse,
+  type Post,
+  type ReplyResponse,
+} from "@/types/post.type";
 
-export const listPost = async () => {
+export const getExplorePosts = async (
+  offset: number,
+  limit: number,
+): Promise<ExploreResponse> => {
   try {
-    const res = await instance.get("/api/posts/explore?limit=9");
+    const res = await instance.get<ExploreResponse>("/api/posts/feed", {
+      params: {
+        offset,
+        limit,
+      },
+    });
     const data = res.data;
     return data;
   } catch (error) {
@@ -12,9 +27,9 @@ export const listPost = async () => {
 };
 
 // explore
-export const explorePost = async () => {
+export const explorePost = async (): Promise<ExploreResponse> => {
   try {
-    const res = await instance.get("/api/posts/explore");
+    const res = await instance.get<ExploreResponse>("/api/posts/explore");
     const data = res.data;
     return data;
   } catch (error) {
@@ -24,7 +39,6 @@ export const explorePost = async () => {
 };
 
 //User posts
-
 export const userPost = async (userId: string) => {
   try {
     const res = await instance.get(`/api/posts/user/${userId}`);
@@ -38,11 +52,10 @@ export const userPost = async (userId: string) => {
 
 // postDetail
 
-export const postDetail = async (postId: string) => {
+export const postDetail = async (postId: string): Promise<PostDetail> => {
   try {
-    const res = await instance.get(`/api/posts/${postId}`);
-    const data = res.data;
-    return data;
+    const res = await instance.get<PostDetail>(`/api/posts/${postId}`);
+    return res.data.data;
   } catch (error) {
     console.error("listUser error:", error);
     throw error;
@@ -61,16 +74,16 @@ export const createPost = async (accessToken: string, formData: FormData) => {
 
 // New post
 
-export const newPost = async () => {
-  try {
-    const res = await instance.get("/api/posts/feed?limit=9");
-    const data = res.data;
-    return data;
-  } catch (error) {
-    console.error("listUser error:", error);
-    throw error;
-  }
-};
+// export const newPost = async () => {
+//   try {
+//     const res = await instance.get("/api/posts/feed?limit=9");
+//     const data = res.data;
+//     return data;
+//   } catch (error) {
+//     console.error("listUser error:", error);
+//     throw error;
+//   }
+// };
 
 // Edit caption post
 
@@ -78,8 +91,8 @@ export const editCaptionPost = async (
   accessToken: string,
   postId: string,
   caption: string,
-) => {
-  return instance.patch(
+): Promise<Post> => {
+  const res = await instance.patch<ReplyResponse<Post>>(
     `/api/posts/${postId}`,
     { caption },
     {
@@ -88,6 +101,7 @@ export const editCaptionPost = async (
       },
     },
   );
+  return res.data.data;
 };
 
 // Delete post
@@ -102,11 +116,19 @@ export const deletePost = async (accessToken: string, postId: string) => {
 
 // Like post
 
-export const likePost = async (accessToken: string, postId: string) => {
-  return instance.post(`/api/posts/${postId}/like`, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
+export const likePost = async (
+  accessToken: string,
+  postId: string,
+): Promise<LikePostResponse> => {
+  const res = await instance.post<{ data: LikePostResponse }>(
+    `/api/posts/${postId}/like`,
+    {},
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
     },
-  });
-};
+  );
 
+  return res.data.data;
+};

@@ -1,7 +1,7 @@
 import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { changePassword, handleChangePassword } from "@/service/authServices";
+import { changePassword } from "@/service/authServices";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
@@ -68,17 +68,21 @@ export default function ChangePasswordAfterLogin() {
       );
       toast.success("Đổi mật khẩu thành công");
       setTimeout(() => {
-        navigate("/login");
+        void navigate("/login");
       }, 1000);
     } catch (error) {
-      toast.error(error?.message || "Đổi mật khẩu thất bại");
+      toast.error("Đổi mật khẩu thất bại");
+      console.log(error);
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-black via-gray-900 to-black">
       <form
-        onSubmit={handleSubmit(onSubmit)}
+        onSubmit={(e) => {
+          e.preventDefault();
+          void handleSubmit(onSubmit)(e);
+        }}
         className="w-[380%] max-w-sm bg-black/60 backdrop-blur-md p-8 rounded-2xl shadow-2xl border border-gray-800"
       >
         <h2 className="text-white text-xl font-semibold text-center mb-6">
@@ -93,7 +97,7 @@ export default function ChangePasswordAfterLogin() {
               className="w-full px-4 py-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-gray-400 transition"
               {...register("currentPassword")}
             />
-            {errors?.currentPassword?.message && (
+            {errors.currentPassword?.message !== undefined && (
               <span className="text-red-600 text-sm ml-3">
                 {errors.currentPassword.message}
               </span>
@@ -107,7 +111,7 @@ export default function ChangePasswordAfterLogin() {
               className="w-full px-4 py-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-gray-400 transition"
               {...register("newPassword")}
             />
-            {errors?.newPassword?.message && (
+            {errors.newPassword?.message !== undefined && (
               <span className="text-red-600 text-sm ml-3">
                 {errors.newPassword.message}
               </span>
@@ -121,7 +125,7 @@ export default function ChangePasswordAfterLogin() {
               className="w-full px-4 py-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-gray-400 transition"
               {...register("confirmPassword")}
             />
-            {errors?.confirmPassword?.message && (
+            {errors.confirmPassword?.message !== undefined && (
               <span className="text-red-600 text-sm ml-3">
                 {errors.confirmPassword.message}
               </span>

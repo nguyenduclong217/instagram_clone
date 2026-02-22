@@ -8,11 +8,12 @@ import {
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
 
+import { type SearchHistoryItem } from "@/types/search";
+
 import {
   Popover,
   PopoverTrigger,
   PopoverContent,
-  PopoverClose,
 } from "@/components/ui/popover";
 import toast from "react-hot-toast";
 import {
@@ -47,6 +48,7 @@ import {
   getSearchHistory,
   searchUser,
 } from "@/service/search";
+import type { SearchUserResponse } from "@/types/search";
 
 export default function Nav() {
   const [click, setClick] = useState(false);
@@ -76,7 +78,7 @@ export default function Nav() {
       localStorage.removeItem("access_token");
       localStorage.removeItem("user");
       toast.success("Đăng xuất thành công");
-      navigate("/login"); // thieu replace
+      void navigate("/login"); // thieu replace
     }
   };
   const { data, isLoading } = useQuery({
@@ -97,7 +99,6 @@ export default function Nav() {
   // Add History search
 
   const queryClient = useQueryClient();
-
   const addSearchHistoryMutation = useMutation({
     mutationFn: ({
       searchedUserId,
@@ -111,15 +112,13 @@ export default function Nav() {
     },
 
     onSuccess: (res) => {
-      queryClient.setQueryData(["searchHistory"], (old: any) => {
-        if (!old) return old;
+      console.log(res);
+      queryClient.setQueryData<SearchUserResponse>(["searchHistory"], (old) => {
+        if (old == null) return old;
 
         return {
           ...old,
-          data: [
-            res.data, // ⬅️ item mới thêm lên đầu
-            ...old.data,
-          ],
+          data: [res, ...old.data],
         };
       });
     },
@@ -132,30 +131,44 @@ export default function Nav() {
   });
 
   // Delete search
-  const deleteSearchMutation = useMutation({
-    mutationFn: (historyId: string) => {
-      const token = localStorage.getItem("access_token")!;
+  const deleteSearchMutation = useMutation<
+    void,
+    Error,
+    string,
+    { previousData?: SearchHistoryItem[] }
+  >({
+    mutationFn: async (historyId: string) => {
+      const token = localStorage.getItem("access_token");
+
+      if (token === null) {
+        throw new Error("No access token");
+      }
+
       return deleteSearch(token, historyId);
     },
 
     onMutate: async (historyId) => {
       await queryClient.cancelQueries({ queryKey: ["searchHistory"] });
 
-      const previousData = queryClient.getQueryData<any>(["searchHistory"]);
+      const previousData = queryClient.getQueryData<SearchHistoryItem[]>([
+        "searchHistory",
+      ]);
 
-      queryClient.setQueryData(["searchHistory"], (old: any) => {
-        if (!old) return old;
-        return {
-          ...old,
-          data: old.data.filter((item) => item._id !== historyId),
-        };
-      });
+      queryClient.setQueryData<SearchHistoryItem[]>(
+        ["searchHistory"],
+        (old) => {
+          if (!old) return old;
+          return old.filter((item) => item._id !== historyId);
+        },
+      );
 
       return { previousData };
     },
 
-    onError: (_err, _id, context) => {
-      queryClient.setQueryData(["searchHistory"], context?.previousData);
+    onError: (_err, _historyId, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(["searchHistory"], context.previousData);
+      }
     },
 
     onSuccess: () => {
@@ -166,22 +179,17 @@ export default function Nav() {
   //Delete all
 
   const clearAllSearchMutation = useMutation({
-    mutationFn: () => {
-      const accessToken = localStorage.getItem("access_token")!;
-      return deleteAllSearch(accessToken);
+    mutationFn: async () => {
+      const token = localStorage.getItem("access_token");
+      if (token === null) throw new Error("No token");
+
+      return deleteAllSearch(token);
     },
 
     onSuccess: () => {
-      toast.success("Đã xóa toàn bộ lịch sử tìm kiếm");
+      queryClient.setQueryData<SearchHistoryItem[]>(["searchHistory"], []);
 
-      // 👉 cập nhật UI realtime
-      queryClient.setQueryData(["searchHistory"], (old: any) => {
-        if (!old) return old;
-        return {
-          ...old,
-          data: [],
-        };
-      });
+      toast.success("Đã xóa toàn bộ lịch sử tìm kiếm");
     },
 
     onError: () => {
@@ -544,7 +552,7 @@ export default function Nav() {
           <div className="mt-3">
             {value.trim().length > 0 ? (
               // ===== SEARCH RESULT =====
-              data?.data?.map((item) => (
+              data?.map((item) => (
                 <div
                   key={item._id}
                   onClick={() => {
@@ -555,12 +563,16 @@ export default function Nav() {
 
                     setValue("");
                     setOpenSearch(false);
-                    navigate(`/users/${item._id}`);
+                    void navigate(`/users/${item._id}`);
                   }}
                   className="mt-2 flex items-center gap-3 cursor-pointer"
                 >
                   <img
-                    src={`https://instagram.f8team.dev${item.profilePicture}`}
+                    src={
+                      item.profilePicture !== null
+                        ? `https://instagram.f8team.dev${item.profilePicture}`
+                        : "data:image/png;base64,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"
+                    }
                     className="w-10 h-10 rounded-full"
                   />
                   <div className="w-[72%]">
@@ -584,29 +596,33 @@ export default function Nav() {
                   </button>
                 </div>
 
-                {historyData?.data?.length === 0 ? (
+                {historyData?.length === 0 ? (
                   <p className="text-sm text-gray-400 px-1">Chưa có tìm kiếm</p>
                 ) : (
-                  historyData?.data.map((item) => (
+                  historyData?.map((item) => (
                     <div
                       key={item._id}
                       onClick={() => {
                         setOpenSearch(false);
-                        navigate(`/users/${item.searchedUserId._id}`);
+                        void navigate(`/users/${item.searchedUserId._id}`);
                       }}
                       className="mt-2 flex items-center gap-3 cursor-pointer"
                     >
                       <div>
                         <img
-                          src={`https://instagram.f8team.dev${item.profilePicture}`}
+                          src={
+                            item.searchedUserId.profilePicture !== null
+                              ? `https://instagram.f8team.dev${item.searchedUserId.profilePicture}`
+                              : "data:image/png;base64,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"
+                          }
                           className="w-10 h-10 rounded-full"
                         />
                         <div className="w-[72%]">
                           <h1 className="font-semibold text-[12px]">
-                            {item?.searchedUserId?.fullName}
+                            {item.searchedUserId.fullName}
                           </h1>
                           <p className="text-[14px] text-gray-400">
-                            {item?.searchedUserId?.username}
+                            {item.searchedUserId.username}
                           </p>
                         </div>
                         <button

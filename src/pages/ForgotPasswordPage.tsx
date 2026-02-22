@@ -8,9 +8,6 @@ import { handleResetPassword } from "@/service/authServices";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
-type ForgotPasswordPage = {
-  email: string;
-};
 const schema = z.object({
   email: z
     .string()
@@ -25,8 +22,11 @@ const schema = z.object({
 });
 
 export default function ForgotPasswordPage() {
+  type ForgotPasswordPage = {
+    email: string;
+  };
   const navigate = useNavigate();
-  const onSubmit: SubmitHandler<ForgotPasswordForm> = async (data) => {
+  const onSubmit: SubmitHandler<ForgotPasswordPage> = async (data) => {
     try {
       await handleResetPassword(data.email);
       toast.success("Đã gửi email khôi phục mật khẩu");
@@ -37,7 +37,7 @@ export default function ForgotPasswordPage() {
   const {
     register,
     handleSubmit,
-    formState: { errors, isLoading, isValid },
+    formState: { errors, isValid },
   } = useForm<ForgotPasswordPage>({
     resolver: zodResolver(schema),
     mode: "onChange",
@@ -67,7 +67,10 @@ export default function ForgotPasswordPage() {
       <div className="w-100 border my-10 mx-auto">
         <form
           className="p-7  flex flex-col justify"
-          onSubmit={handleSubmit(onSubmit)}
+          onSubmit={(e) => {
+            e.preventDefault();
+            void handleSubmit(onSubmit)(e);
+          }}
         >
           <div className="rounded-full border w-fit mx-auto">
             <Lock size={100} className="p-3" />
@@ -85,7 +88,7 @@ export default function ForgotPasswordPage() {
                 className="w-[100%] px-3 py-2 border border-gray-300 rounded-sm text-sm focus:outline-none focus:border-gray-400"
                 {...register("email")}
               />
-              {errors?.email?.message && (
+              {errors.email?.message !== undefined && (
                 <span className="text-red-600 text-sm ml-2">
                   {errors.email.message}
                 </span>
@@ -109,13 +112,16 @@ export default function ForgotPasswordPage() {
             </span>
 
             {/* Create new account */}
-            <p onClick={() => navigate(`/accounts/emailSignup`)}  className="font-semibold mt-3 text-center hover:underline">
+            <p
+              onClick={() => void navigate(`/accounts/emailSignup`)}
+              className="font-semibold mt-3 text-center hover:underline"
+            >
               Create new account
             </p>
           </div>
         </form>
         <Button
-          onClick={() => navigate(`/login`)}
+          onClick={() => void navigate(`/login`)}
           variant="ghost"
           className="mt-30 w-[100%] bg-gray-100 border-t hover:underline rounded-none"
         >

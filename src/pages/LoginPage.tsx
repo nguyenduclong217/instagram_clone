@@ -37,8 +37,10 @@ type LoginFormValues = {
 import Footer from "./Footer";
 import { handleLogin } from "@/service/authServices";
 import { useNavigate } from "react-router-dom";
-import { useAuthStore } from "@/stores/infoUser";
-import { initSocket } from "@/socket-server/socket";
+import { userAuthStore } from "@/types/user.type";
+// import { useAuthStore } from "@/stores/infoUser";
+
+// import { initSocket } from "@/socket-server/socket";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -56,20 +58,13 @@ export default function LoginPage() {
     try {
       const response = await handleLogin(data.email, data.password);
       console.log(response);
-      if (response) {
-        useAuthStore.getState().setUser(response.data.user);
-        localStorage.setItem("access_token", response.data.tokens.accessToken);
-        localStorage.setItem(
-          "refresh_token",
-          response.data.tokens.refreshToken,
-        );
-        //socket
-        // initSocket(response.data.tokens.accessToken);
-        toast.success("Đăng nhập thành công!");
-        setTimeout(() => {
-          navigate("/");
-        }, 1000);
-      }
+      userAuthStore.getState().setUser(response.data.user);
+      localStorage.setItem("access_token", response.data.tokens.accessToken);
+      localStorage.setItem("refresh_token", response.data.tokens.refreshToken);
+      toast.success("Đăng nhập thành công!");
+      setTimeout(() => {
+        void navigate("/");
+      }, 1000);
     } catch (error) {
       console.log(error);
     }
@@ -93,7 +88,10 @@ export default function LoginPage() {
           {/* Form */}
           <form
             className="w-full flex flex-col gap-3"
-            onSubmit={handleSubmit(onSubmit)}
+            onSubmit={(e) => {
+              e.preventDefault();
+              void handleSubmit(onSubmit)(e);
+            }}
           >
             {/* User Name */}
             <div className="flex justify-center flex-col gap-2">
@@ -103,7 +101,7 @@ export default function LoginPage() {
                 className="w-[80%] px-3 py-2 border mx-auto border-gray-300 rounded-sm text-sm focus:outline-none focus:border-gray-400"
                 {...register("email")}
               />
-              {errors?.email?.message && (
+              {errors.email?.message !== undefined && (
                 <span className="text-red-600 text-sm ml-10">
                   {errors.email.message}
                 </span>
@@ -118,7 +116,7 @@ export default function LoginPage() {
                 className="w-[80%] px-3 py-2 border mx-auto border-gray-300 rounded-sm text-sm focus:outline-none focus:border-gray-400 "
                 {...register("password")}
               />
-              {errors?.password?.message && (
+              {errors.password?.message !== undefined && (
                 <span className="text-red-600 text-sm ml-10">
                   {errors.password.message}
                 </span>
@@ -147,7 +145,7 @@ export default function LoginPage() {
               </h1>
             </div>
             <h1
-              onClick={() => navigate(`/forgot-password`)}
+              onClick={() => void navigate(`/forgot-password`)}
               className="mt-4 text-center cursor-pointer hover:underline"
             >
               Forgot password?
@@ -155,7 +153,7 @@ export default function LoginPage() {
             <h1 className="text-center mt-3">
               Don't have an account?{" "}
               <span
-                onClick={() => navigate(`/accounts/emailSignup`)}
+                onClick={() => void navigate(`/accounts/emailSignup`)}
                 className="text-blue-600 font-semibold cursor-pointer"
               >
                 Sign up

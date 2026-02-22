@@ -1,5 +1,10 @@
 import instance from "@/pages/utils/axios";
 import { useRegisterStore } from "@/stores/authStore";
+import {
+  LoginResponse,
+  VerifyUser,
+  type VerifyEmailResponse,
+} from "@/types/auth";
 import axios from "axios";
 import toast from "react-hot-toast";
 
@@ -13,9 +18,9 @@ export const handleRegister = async (
   password: string,
   confirmPassword: string,
   fullName: string,
-) => {
+): Promise<void> => {
   try {
-    const response = await instance.post(
+    await instance.post(
       "/api/auth/register",
       {
         email,
@@ -31,15 +36,10 @@ export const handleRegister = async (
       },
     );
 
-    //REGISTER THÀNH CÔNG → LƯU EMAIL
     useRegisterStore.getState().setEmail(email);
-
-    const data = response;
-    console.log(data);
-    return data.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      const message = error.response?.data?.message || "Đăng kí thất bại";
+      const message = "Đăng kí thất bại";
       toast.error(message);
     } else {
       toast.error("Đã có lỗi xày ra ở đâu đó");
@@ -50,59 +50,54 @@ export const handleRegister = async (
 
 //Login
 
-export const handleLogin = async (email: string, password: string) => {
-  try {
-    const response = await instance.post(
-      `/api/auth/login`,
-      {
-        email,
-        password,
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      },
-    );
-    const data = response.data;
-    return data;
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      toast.error("Đăng nhập thất bại. Vui lòng thử lại");
-    } else {
-      toast.error("Đã có lỗi xảy ra vui lòng thử lại");
-    }
-  }
+export const handleLogin = async (
+  email: string,
+  password: string,
+): Promise<LoginResponse> => {
+  const response = await instance.post<LoginResponse>("/api/auth/login", {
+    email,
+    password,
+  });
+
+  return response.data;
 };
 
 // VERIFY email
 
-export const handleVerifyEmail = async (token: string) => {
-  try {
-    const response = await instance.post(
-      `/api/auth/verify-email/${token}`,
-      {
-        token,
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      },
-    );
-    const data = response.data;
-    console.log(data);
-    return data;
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      const message = "Xác nhận email thất bại";
-      toast.error(message);
-    } else {
-      toast.error("Đã có lỗi xày ra ở đâu đó");
-      throw error;
-    }
-    return null;
-  }
+// export const handleVerifyEmail = async (token: string) => {
+//   try {
+//     const response = await instance.post(
+//       `/api/auth/verify-email/${token}`,
+//       {
+//         token,
+//       },
+//       {
+//         headers: {
+//           "Content-Type": "application/json",
+//         },
+//       },
+//     );
+//     const data = response.data;
+//     console.log(data);
+//     return data;
+//   } catch (error) {
+//     if (axios.isAxiosError(error)) {
+//       const message = "Xác nhận email thất bại";
+//       toast.error(message);
+//     } else {
+//       toast.error("Đã có lỗi xày ra ở đâu đó");
+//       throw error;
+//     }
+//     return null;
+//   }
+// };
+
+export const handleVerifyEmail = async (token: string): Promise<VerifyUser> => {
+  const { data } = await instance.post<VerifyEmailResponse>(
+    `/api/auth/verify-email/${token}`,
+  );
+
+  return data.data.user;
 };
 
 // Resent Email
@@ -171,31 +166,18 @@ export const handleChangePassword = async (
   token: string,
   password: string,
   confirmPassword: string,
-) => {
+): Promise<void> => {
   try {
-    const response = await instance.post(
-      `/api/auth/reset-password/${token}`,
-      {
-        password,
-        confirmPassword,
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      },
-    );
-    const data = response.data;
-    console.log(data);
-    return data;
+    await instance.post(`/api/auth/reset-password/${token}`, {
+      password,
+      confirmPassword,
+    });
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      throw new Error(
-        error.response?.data?.message ||
-          "Mật khẩu không được làm mới thành công",
-      );
+      throw new Error("Mật khẩu không được làm mới thành công");
     }
-    return null;
+
+    throw error;
   }
 };
 
@@ -236,15 +218,3 @@ export const changePassword = async (
 };
 
 // InfoUser _id
-
-export const infoUserId = async (userId: string) => {
-  try {
-    const res = await instance.get(`/api/users/${userId}`);
-    const data = res.data;
-    return data;
-  } catch (error) {
-    console.error("listUser error:", error);
-    throw error;
-  }
-};
-
