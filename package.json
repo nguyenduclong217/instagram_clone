@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "lint": "eslint .",
+    "lint": "eslint.",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -57,4 +57,5 @@
   "overrides": {
     "vite": "npm:rolldown-vite@7.2.5"
   }
+  
 }
