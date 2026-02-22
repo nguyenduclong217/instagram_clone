@@ -27,7 +27,6 @@ import {
   Menu,
   LayoutDashboard,
   X,
-  Images,
   Settings,
   SquareActivity,
   Bookmark,
@@ -48,7 +47,7 @@ import {
   getSearchHistory,
   searchUser,
 } from "@/service/search";
-import type { SearchUserResponse } from "@/types/search";
+import type { SearchHistory } from "@/types/search";
 
 export default function Nav() {
   const [click, setClick] = useState(false);
@@ -81,7 +80,7 @@ export default function Nav() {
       void navigate("/login"); // thieu replace
     }
   };
-  const { data, isLoading } = useQuery({
+  const { data } = useQuery({
     queryKey: ["searchUser", debouncedValue],
     queryFn: () => searchUser(debouncedValue),
     enabled: !!debouncedValue.trim(),
@@ -113,7 +112,7 @@ export default function Nav() {
 
     onSuccess: (res) => {
       console.log(res);
-      queryClient.setQueryData<SearchUserResponse>(["searchHistory"], (old) => {
+      queryClient.setQueryData<SearchHistoryItem>(["searchHistory"], (old) => {
         if (old == null) return old;
 
         return {
