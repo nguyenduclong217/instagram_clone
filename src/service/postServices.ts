@@ -39,9 +39,11 @@ export const explorePost = async (): Promise<ExploreResponse> => {
 };
 
 //User posts
-export const userPost = async (userId: string) => {
+export const userPost = async (userId: string): Promise<ExploreResponse> => {
   try {
-    const res = await instance.get(`/api/posts/user/${userId}`);
+    const res = await instance.get<ExploreResponse>(
+      `/api/posts/user/${userId}`,
+    );
     const data = res.data;
     return data;
   } catch (error) {

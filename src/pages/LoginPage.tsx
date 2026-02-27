@@ -38,6 +38,7 @@ import Footer from "./Footer";
 import { handleLogin } from "@/service/authServices";
 import { useNavigate } from "react-router-dom";
 import { userAuthStore } from "@/types/user.type";
+import { initSocket } from "@/socket-server/socket";
 // import { useAuthStore } from "@/stores/infoUser";
 
 // import { initSocket } from "@/socket-server/socket";
@@ -48,7 +49,7 @@ export default function LoginPage() {
   const {
     register,
     handleSubmit,
-    formState: { errors, isLoading, isValid },
+    formState: { errors, isValid },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(schema),
     mode: "onChange",
@@ -61,6 +62,7 @@ export default function LoginPage() {
       userAuthStore.getState().setUser(response.data.user);
       localStorage.setItem("access_token", response.data.tokens.accessToken);
       localStorage.setItem("refresh_token", response.data.tokens.refreshToken);
+      initSocket(response.data.tokens.accessToken);
       toast.success("Đăng nhập thành công!");
       setTimeout(() => {
         void navigate("/");

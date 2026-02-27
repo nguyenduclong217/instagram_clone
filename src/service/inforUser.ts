@@ -5,6 +5,7 @@ import type {
   FollowingData,
   InfoResponse,
   InfoUser,
+  ListUserResponse,
 } from "@/types/user.type";
 
 // User Info
@@ -55,16 +56,20 @@ export const removeAvt = async (
 
 // List user
 
-export const listUser = async (accessToken: string) => {
+export const listUser = async (
+  accessToken: string,
+): Promise<ListUserResponse> => {
   try {
-    const res = await instance.get("/api/users/suggested?limit=4", {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
+    const res = await instance.get<ListUserResponse>(
+      "/api/users/suggested?limit=4",
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
       },
-    });
+    );
 
-    const data = res.data;
-    return data;
+    return res.data;
   } catch (error) {
     console.error("listUser error:", error);
     throw error;

@@ -73,3 +73,21 @@ export interface DeleteAvatarResponse {
   message: string;
   data: null;
 }
+
+export interface SuggestedUser {
+  _id: string;
+  username: string;
+  fullName: string;
+  profilePicture: string;
+  bio: string;
+  postsCount: number;
+  followersCount: number;
+  followingCount: number;
+  isFollowing: boolean;
+}
+
+export interface ListUserResponse {
+  success: boolean;
+  message: string;
+  data: SuggestedUser[];
+}

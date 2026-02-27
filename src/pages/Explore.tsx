@@ -7,13 +7,11 @@ import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 
 export default function Explore() {
   const [postId, setPostId] = useState<string | null>(null);
-  const { data, isLoading } = useQuery({
+  const { data } = useQuery({
     queryKey: ["listPost"],
     queryFn: explorePost,
   });
   console.log(data);
-
-  if (isLoading) return <p>Loading...</p>;
 
   return (
     <div className="flex ml-20 w-[90%] h-full">

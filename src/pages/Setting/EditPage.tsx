@@ -1,11 +1,11 @@
 import { useState } from "react";
 import Footer from "../Footer";
-import { useAuthStore } from "@/stores/infoUser";
+import { userAuthStore } from "@/types/user.type";
 
 export default function EditPage() {
   const [gender, setGender] = useState("Prefer not to say");
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const user = useAuthStore((s) => s.user);
+  const user = userAuthStore((s) => s.user);
   return (
     <div className="mt-17">
       <div className="w-[80%] mx-auto">
@@ -14,7 +14,6 @@ export default function EditPage() {
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 rounded-full bg-gray-300 flex items-center justify-center">
               <img src={user?.profilePicture} alt="" />
-              {/* <span className="text-gray-500 text-xl">👤</span> */}
             </div>
             <div>
               <p className="font-semibold">{user?.username}</p>

@@ -2,7 +2,7 @@ import { handleResendEmail, handleVerifyEmail } from "@/service/authServices";
 import { useResendStore } from "@/service/resend";
 import { useRegisterStore } from "@/stores/authStore";
 import { Mail } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import toast from "react-hot-toast";
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -14,7 +14,6 @@ type FormValues = {
 export default function VerifyEmailNotice() {
   const email = useRegisterStore.getState().email;
   const { cooldown, isDisabled, startCooldown, tick } = useResendStore();
-
 
   const handleResend = async (email: string) => {
     try {
@@ -39,15 +38,21 @@ export default function VerifyEmailNotice() {
 
   // console.log(email);
   // console.log(token);
+
+  const hasVerified = useRef(false);
+
   useEffect(() => {
-    if (token === undefined) return;
+    if (token === undefined || hasVerified.current) return;
+
+    hasVerified.current = true;
 
     const verify = async () => {
       try {
         await handleVerifyEmail(token);
         toast.success("Email verified successfully");
         setTimeout(() => navigate("/login"), 2000);
-      } catch {
+      } catch (err) {
+        // console.log(err.response.data);
         toast.error("Xác nhận email thất bại");
       }
     };

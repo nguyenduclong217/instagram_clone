@@ -61,12 +61,12 @@ export default function CreatePost() {
     <div>
       <Dialog>
         <DialogTrigger asChild>
-          <button className="px-3 py-2 hover:bg-gray-100 rounded flex justify-between">
+          <button className="px-3 py-2 hover:bg-gray-100 rounded flex justify-between w-[100%]">
             <span>Post</span>
             <Images />
           </button>
         </DialogTrigger>
-        <DialogContent className="w-150 h-120">
+        <DialogContent className="w-150 h-120 overflow-hidden">
           {!file ? (
             <div className="m-2 flex flex-col rounded-xl bg-white shadow-md">
               <h1 className="p-4 text-center text-lg font-semibold">
@@ -101,14 +101,14 @@ export default function CreatePost() {
 
                 <Button
                   onClick={() => fileRef.current?.click()}
-                  className="mt-2 rounded-lg px-6 py-2 text-sm font-semibold"
+                  className="mt-2 bg-blue-700 cursor-pointer hover:bg-blue-800 rounded-lg px-6 py-2 text-sm font-semibold"
                 >
                   Chọn từ máy tính
                 </Button>
               </div>
             </div>
           ) : (
-            <div className="flex flex-col h-full w-full">
+            <div className="">
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -116,18 +116,18 @@ export default function CreatePost() {
                 }}
                 className="flex flex-col h-full w-full"
               >
-                <div className="w-full bg-black flex items-center justify-center max-h-[400px]">
+                <div className="w-full bg-black flex items-center justify-center max-h-[350px]">
                   {file.type.startsWith("image") ? (
                     <img
                       src={previewUrl!}
                       alt="preview"
-                      className="max-h-[400px] w-full object-contain"
+                      className="max-h-[100%] w-full object-contain"
                     />
                   ) : (
                     <video
                       src={previewUrl!}
                       controls
-                      className="max-h-[400px] w-full"
+                      className="max-h-[100%] w-full"
                     />
                   )}
                 </div>
@@ -138,19 +138,22 @@ export default function CreatePost() {
                       placeholder="Viết chú thích..."
                       value={caption}
                       onChange={(e) => setCaption(e.target.value)}
-                      className="resize-none w-[80%] px-2 py-3 text-sm outline-none"
+                      className="resize-none w-[80%] px-2 py-3 text-sm outline-none "
                     />
                     <Button
-                      type="button"
-                      className="ml-4 w-20"
-                      onClick={resetForm}
+                      type="submit"
+                      className=" px-6 bg-blue-700 cursor-pointer hover:bg-blue-800"
                     >
-                      Hủy
+                      Đăng bài
                     </Button>
                   </div>
 
-                  <Button type="submit" className="self-end px-6">
-                    Đăng bài
+                  <Button
+                    type="button"
+                    className=" self-end ml-4 w-20 bg-red-500 hover:bg-red-600 cursor-pointer "
+                    onClick={resetForm}
+                  >
+                    Hủy
                   </Button>
                 </div>
               </form>
